@@ -1,0 +1,14 @@
+# OS / editor noise
+.DS_Store
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Env
+.env
+.env.local
+
+# Dependencies
+node_modules/
