@@ -1,0 +1,10 @@
+numpy>=1.26
+pandas>=2.2
+xgboost>=2.0
+scikit-learn>=1.4
+finguard-common
+finguard-vertex
+finguard-evaluation
+google-cloud-bigquery>=3.20
+google-cloud-aiplatform>=1.50
+tensorflow-data-validation>=1.14

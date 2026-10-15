@@ -1,0 +1,37 @@
+# Cloud Build pipeline: `terraform plan` for the named environment.
+#
+# Triggered on PRs that touch terraform/** or envs/<env>/**.tfvars.
+#
+# Required substitutions:
+#   _ENV: dev / staging / prod
+#
+# Required IAM:
+#   - Service account `terraform-runner@<project>.iam` with `roles/owner`
+#     scoped to the target project. See terraform/bootstrap/README.md.
+
+steps:
+  - name: hashicorp/terraform:1.6
+    dir: terraform/envs/${_ENV}
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        set -e
+        terraform init -backend=false -input=false
+        terraform validate
+        terraform plan \
+          -var-file=terraform.tfvars \
+          -input=false \
+          -lock-timeout=300s \
+          -out=tfplan
+        terraform show -no-color tfplan > tfplan.txt
+        echo "--- PLAN ---"
+        cat tfplan.txt
+
+substitutions:
+  _ENV: dev
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1800s

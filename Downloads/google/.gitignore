@@ -1,0 +1,82 @@
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+*.bak
+
+# Logs
+*.log
+logs/
+
+# Env
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+service-account*.json
+gcp-key.json
+
+# Build artifacts
+bin/
+dist/
+build/
+out/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+.next-build/
+.turbo/
+*.tsbuildinfo
+.pnpm-store/
+
+# Go
+*.test
+*.out
+vendor/
+coverage.out
+coverage.html
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Dataflow / Beam
+.idea/dataflow/
+*-bin
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Misc
+.cache/
+.tmp/
+.tmp/

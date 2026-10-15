@@ -1,0 +1,47 @@
+# Cloud Deploy: document-service (Python) delivery pipeline.
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: finguard-document-service
+description: FinGuard document-service (Python) — progressive delivery
+serialPipeline:
+  stages:
+    - targetId: finguard-dev-document-service
+      profiles: [dev]
+    - targetId: finguard-staging-document-service
+      profiles: [staging]
+    - targetId: finguard-prod-document-service
+      profiles: [prod]
+      strategy:
+        canary:
+          canaryDeployment:
+            percentages: [50, 100]
+            verify: true
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: finguard-dev-document-service
+description: dev
+run:
+  location: projects/${PROJECT_ID}/locations/us-central1
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: finguard-staging-document-service
+description: staging
+run:
+  location: projects/${PROJECT_ID}/locations/us-central1
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: finguard-prod-document-service
+description: prod
+run:
+  location: projects/${PROJECT_ID}/locations/us-central1
+requireApproval: true

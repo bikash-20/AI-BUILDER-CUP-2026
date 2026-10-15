@@ -1,0 +1,98 @@
+# Cloud Build pipeline: pull-request checks.
+#
+# Triggered on every PR. Runs lint + unit tests for all languages in
+# parallel. This is a fast fail-fast gate; full integration tests run
+# on the merge pipeline.
+
+steps:
+  # Go services
+  - name: gcr.io/cloud-builders/go
+    id: go-lint
+    args:
+      - vet
+      - ./...
+    dir: services
+
+  - name: gcr.io/cloud-builders/go
+    id: go-test
+    args:
+      - test
+      - -race
+      - -count=1
+      - ./...
+    dir: services
+
+  # Python libs + services
+  - name: gcr.io/cloud-builders/python:3.11
+    id: py-install
+    entrypoint: pip
+    args:
+      - install
+      - -r
+      - ml/requirements.txt
+    dir: ml
+
+  - name: gcr.io/cloud-builders/python:3.11
+    id: py-test
+    entrypoint: pytest
+    args:
+      - -q
+      - libs
+      - services
+    dir: ml
+
+  # Dataflow unit tests
+  - name: gcr.io/cloud-builders/python:3.11
+    id: df-install
+    entrypoint: pip
+    args:
+      - install
+      - -r
+      - dataflow/requirements.txt
+    dir: dataflow
+
+  - name: gcr.io/cloud-builders/python:3.11
+    id: df-test
+    entrypoint: pytest
+    args:
+      - -q
+      - jobs
+    dir: dataflow
+
+  # Frontend
+  - name: gcr.io/cloud-builders/npm
+    id: fe-install
+    args:
+      - install
+      - --ci
+    dir: frontend
+
+  - name: gcr.io/cloud-builders/npm
+    id: fe-typecheck
+    args:
+      - run
+      - typecheck
+    dir: frontend
+
+  - name: gcr.io/cloud-builders/npm
+    id: fe-test
+    args:
+      - run
+      - test
+      - -- --run
+    dir: frontend
+
+  # Terraform validate
+  - name: hashicorp/terraform:1.6
+    id: tf-validate
+    dir: terraform/envs/dev
+    entrypoint: sh
+    args:
+      - -c
+      - terraform init -backend=false -input=false && terraform validate
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 1800s

@@ -1,0 +1,47 @@
+# Cloud Deploy: chat-bff delivery pipeline.
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: finguard-chat-bff
+description: FinGuard chat-bff — progressive delivery
+serialPipeline:
+  stages:
+    - targetId: finguard-dev-chat-bff
+      profiles: [dev]
+    - targetId: finguard-staging-chat-bff
+      profiles: [staging]
+    - targetId: finguard-prod-chat-bff
+      profiles: [prod]
+      strategy:
+        canary:
+          canaryDeployment:
+            percentages: [50, 100]
+            verify: true
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: finguard-dev-chat-bff
+description: dev
+run:
+  location: projects/${PROJECT_ID}/locations/us-central1
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: finguard-staging-chat-bff
+description: staging
+run:
+  location: projects/${PROJECT_ID}/locations/us-central1
+
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: finguard-prod-chat-bff
+description: prod
+run:
+  location: projects/${PROJECT_ID}/locations/us-central1
+requireApproval: true

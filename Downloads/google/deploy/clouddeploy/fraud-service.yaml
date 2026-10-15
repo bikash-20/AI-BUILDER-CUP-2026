@@ -1,0 +1,32 @@
+# Cloud Deploy: skaffold-style render hints for fraud-service.
+# Cloud Build will generate this automatically from go-service.yaml;
+# the file is committed for documentation purposes.
+
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: fraud-service
+manifests:
+  rawYaml:
+    - services/deploy/fraud-service.k8s.yaml
+deploy:
+  cloudrun:
+    projectid: ${PROJECT_ID}
+    region: us-central1
+    service: finguard-prod-fraud-service
+    images:
+      - image: fraud-service
+        imagePath: gcr.io/finguard/fraud-service:latest
+profiles:
+  - name: dev
+    deploy:
+      cloudrun:
+        service: finguard-dev-fraud-service
+  - name: staging
+    deploy:
+      cloudrun:
+        service: finguard-staging-fraud-service
+  - name: prod
+    deploy:
+      cloudrun:
+        service: finguard-prod-fraud-service

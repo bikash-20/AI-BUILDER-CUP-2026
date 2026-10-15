@@ -1,0 +1,52 @@
+[project]
+name = "finguard-ml"
+version = "0.1.0"
+description = "FinGuard AI Python ML/AI layer"
+requires-python = ">=3.11"
+authors = [{ name = "FinGuard AI Contributors" }]
+readme = "README.md"
+license = { text = "Apache-2.0" }
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "black>=24.0",
+    "mypy>=1.10",
+    "types-requests",
+    "freezegun>=1.5",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["libs"]
+include = ["finguard_*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP", "N", "ASYNC"]
+ignore = ["E501", "B008"]
+
+[tool.black]
+line-length = 110
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["libs", "services", "training", "pipelines", "../dataflow"]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict_optional = false

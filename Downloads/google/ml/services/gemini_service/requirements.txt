@@ -1,0 +1,7 @@
+# gemini_service Cloud Run image
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.7
+finguard-common
+finguard-gemini
+google-cloud-aiplatform[vertexai]>=1.50

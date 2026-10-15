@@ -1,0 +1,6 @@
+numpy>=1.26
+tensorflow>=2.15
+finguard-common
+finguard-vertex
+finguard-evaluation
+google-cloud-bigquery>=3.20

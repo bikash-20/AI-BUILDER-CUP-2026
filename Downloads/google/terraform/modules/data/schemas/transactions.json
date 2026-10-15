@@ -1,0 +1,22 @@
+[
+  { "name": "txn_id",        "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "customer_id",   "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "account_id",    "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "amount",        "type": "NUMERIC",   "mode": "REQUIRED" },
+  { "name": "currency",      "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "merchant_id",   "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "merchant_name", "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "mcc",           "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "device_id",     "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "ip_address",    "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "geo_country",   "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "geo_city",      "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "event_time",    "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "ingested_at",   "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "source",        "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "status",        "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "risk_score",    "type": "FLOAT64",   "mode": "NULLABLE" },
+  { "name": "decision",      "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "model_version", "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "features",      "type": "JSON",      "mode": "NULLABLE" }
+]

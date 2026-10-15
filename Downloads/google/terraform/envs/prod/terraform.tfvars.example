@@ -1,0 +1,4 @@
+project_id       = "finguard-prod"
+region           = "us-central1"
+access_policy_id = "REPLACE_ME"
+alert_email      = "prod-oncall@example.com"

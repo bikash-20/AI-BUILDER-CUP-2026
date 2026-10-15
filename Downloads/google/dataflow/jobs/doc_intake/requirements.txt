@@ -1,0 +1,4 @@
+apache-beam[gcp]>=2.55
+google-cloud-storage>=2.16
+google-cloud-bigquery>=3.20
+finguard-common

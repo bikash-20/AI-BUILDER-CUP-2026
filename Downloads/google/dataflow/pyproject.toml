@@ -1,0 +1,10 @@
+[project]
+name = "finguard-dataflow"
+version = "0.1.0"
+description = "FinGuard Apache Beam / Dataflow jobs"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+
+[tool.pytest.ini_options]
+testpaths = ["jobs"]
+addopts = "-q"

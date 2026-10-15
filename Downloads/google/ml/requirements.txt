@@ -1,0 +1,46 @@
+# Top-level ML dev requirements.
+# Service-specific Cloud Run images use their own requirements.txt in
+# ml/services/<svc>/requirements.txt.
+
+# GCP
+google-cloud-aiplatform>=1.50
+google-cloud-documentai>=2.30
+google-cloud-dlp>=3.16
+google-cloud-bigquery>=3.20
+google-cloud-storage>=2.16
+google-cloud-pubsub>=2.21
+google-cloud-secret-manager>=2.20
+google-cloud-datastore>=2.19
+google-cloud-resource-manager>=1.10
+
+# Vertex AI Pipelines (Kubeflow)
+kfp>=2.6
+kfp-google-cloud>=2.6
+
+# ML
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+xgboost>=2.0
+tensorflow>=2.15
+tensorflow-data-validation>=1.14
+shap>=0.45
+
+# Data
+apache-beam[gcp]>=2.55
+pydantic>=2.7
+
+# Gen AI
+google-cloud-aiplatform[vertexai,langchain]>=1.50
+vertexai>=1.50
+
+# Web
+fastapi>=0.110
+uvicorn[standard]>=0.29
+httpx>=0.27
+
+# Utils
+pyyaml>=6.0
+structlog>=24.1
+tenacity>=8.3
+python-dotenv>=1.0

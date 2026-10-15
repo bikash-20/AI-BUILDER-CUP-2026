@@ -1,0 +1,31 @@
+# Cloud Build pipeline: `terraform apply` for the named environment.
+#
+# Triggered on merge to main. Includes a manual approval gate for prod.
+#
+# Required substitutions:
+#   _ENV: dev / staging / prod
+#   _APPROVED: true (set by an approver in the Cloud Build UI)
+
+steps:
+  - name: hashicorp/terraform:1.6
+    dir: terraform/envs/${_ENV}
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        set -e
+        if [ "${_ENV}" = "prod" ] && [ "${_APPROVED}" != "true" ]; then
+          echo "ERROR: prod apply requires manual approval (_APPROVED=true)"
+          exit 1
+        fi
+        terraform init -input=false
+        terraform apply -input=false -auto-approve tfplan
+
+substitutions:
+  _ENV: dev
+  _APPROVED: "false"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 3600s

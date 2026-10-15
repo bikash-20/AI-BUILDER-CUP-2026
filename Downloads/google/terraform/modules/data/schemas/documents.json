@@ -1,0 +1,13 @@
+[
+  { "name": "doc_id",            "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "customer_id",       "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "doc_type",          "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "gcs_uri",           "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "uploaded_at",       "type": "TIMESTAMP", "mode": "REQUIRED" },
+  { "name": "processed_at",      "type": "TIMESTAMP", "mode": "NULLABLE" },
+  { "name": "status",            "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "processor_id",      "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "extracted_fields",  "type": "JSON",      "mode": "NULLABLE" },
+  { "name": "validation_result", "type": "JSON",      "mode": "NULLABLE" },
+  { "name": "error_message",     "type": "STRING",    "mode": "NULLABLE" }
+]

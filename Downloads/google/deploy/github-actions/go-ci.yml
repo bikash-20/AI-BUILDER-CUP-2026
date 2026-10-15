@@ -1,0 +1,37 @@
+name: go-ci
+
+on:
+  push:
+    paths:
+      - "services/**"
+      - ".github/workflows/go-ci.yml"
+  pull_request:
+    paths:
+      - "services/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: services/go.sum
+
+      - name: go vet
+        working-directory: services
+        run: go vet ./...
+
+      - name: go test
+        working-directory: services
+        run: go test -race -count=1 -v ./...
+
+      - name: go build
+        working-directory: services
+        run: |
+          for svc in fraud-service risk-service chat-bff document-service compliance-service alert-worker api-gateway; do
+            go build -o /tmp/$svc ./cmd/$svc || exit 1
+          done

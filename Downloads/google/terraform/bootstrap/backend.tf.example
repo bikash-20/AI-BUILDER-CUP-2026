@@ -1,0 +1,12 @@
+# Example backend configuration for Terraform state.
+# Copy this file to backend.tf in envs/<env>/ and fill in the values.
+
+terraform {
+  backend "gcs" {
+    # Globally-unique bucket name created during bootstrap.
+    bucket = "REPLACE_ME_tfstate_bucket"
+
+    # Per-environment prefix keeps dev/staging/prod state isolated.
+    prefix = "envs/dev"
+  }
+}

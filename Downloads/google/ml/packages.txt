@@ -1,0 +1,9 @@
+# OS packages for Cloud Run base image builds.
+# Referenced by service-level Dockerfiles via:
+#   COPY packages.txt .
+#   RUN apt-get update && apt-get install -y --no-install-recommends $(cat packages.txt) ...
+
+libgl1
+libglib2.0-0
+tesseract-ocr-eng
+poppler-utils

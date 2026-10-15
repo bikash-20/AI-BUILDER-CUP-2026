@@ -1,0 +1,25 @@
+# CODEOWNERS
+# One or more owners per top-level path. Reviewers are auto-assigned
+# based on the file path of the PR.
+
+# Default owners (anything not matched below)
+/                   @finguard/platform
+
+# Frontend
+/frontend/          @finguard/web
+
+# Go services
+/services/          @finguard/platform-go
+
+# Python ML/AI
+/ml/                @finguard/ml
+
+# Dataflow
+/dataflow/          @finguard/data
+
+# Terraform
+/terraform/         @finguard/sre
+/deploy/            @finguard/sre
+
+# Docs
+/docs/              @finguard/platform

@@ -1,0 +1,13 @@
+[
+  { "name": "event_id",    "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "actor",       "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "actor_type",  "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "action",      "type": "STRING",    "mode": "REQUIRED" },
+  { "name": "resource",    "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "before",      "type": "JSON",      "mode": "NULLABLE" },
+  { "name": "after",       "type": "JSON",      "mode": "NULLABLE" },
+  { "name": "request_id",  "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "ip_address",  "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "user_agent",  "type": "STRING",    "mode": "NULLABLE" },
+  { "name": "occurred_at", "type": "TIMESTAMP", "mode": "REQUIRED" }
+]

@@ -1,0 +1,22 @@
+# Mirror of the Cloud Build PR-checks pipeline for users who use
+# GitHub Actions instead of Cloud Build. Either-or; Cloud Build is the
+# canonical CI per docs/.
+name: ci
+
+on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+  push:
+    branches: [main]
+
+jobs:
+  go:
+    uses: ./.github/workflows/_go.yml
+  python:
+    uses: ./.github/workflows/_python.yml
+  frontend:
+    uses: ./.github/workflows/_frontend.yml
+  terraform:
+    uses: ./.github/workflows/_terraform.yml

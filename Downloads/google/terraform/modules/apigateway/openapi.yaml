@@ -1,0 +1,409 @@
+# FinGuard AI — Public API (OpenAPI 3.0)
+#
+# This spec is the source of truth for the public HTTP contract. The
+# `servers` block points to placeholders that should be replaced by
+# Cloud Run URLs via env substitution at deploy time.
+
+openapi: 3.0.3
+info:
+  title: FinGuard AI Public API
+  version: 1.0.0
+  description: |
+    Public HTTP surface for FinGuard AI. Routes are proxied to the
+    appropriate Cloud Run service. All endpoints require a valid
+    Identity Platform JWT in the `Authorization: Bearer <token>` header.
+  license:
+    name: Proprietary
+  contact:
+    name: FinGuard Platform Team
+    email: platform@finguard.example.com
+
+servers:
+  - url: https://REPLACE_ME_GATEWAY_HOSTNAME
+    description: FinGuard AI Gateway
+
+security:
+  - firebase: []
+
+tags:
+  - name: fraud
+    description: Real-time fraud scoring
+  - name: risk
+    description: Customer risk profiles
+  - name: chat
+    description: Conversational AI (Gemini RAG)
+  - name: documents
+    description: KYC / document intelligence
+  - name: compliance
+    description: SAR / CTR drafts and audit
+  - name: alerts
+    description: Fraud alert management
+
+paths:
+  /v1/score:
+    post:
+      tags: [fraud]
+      summary: Score a transaction
+      description: |
+        Synchronous fraud decision for a single transaction. Returns
+        the model score, decision (APPROVE/REVIEW/BLOCK), top SHAP
+        features, and a request id for traceability.
+      operationId: scoreTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreRequest"
+      responses:
+        "200":
+          description: Decision returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoreResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /v1/risk/{customer_id}:
+    get:
+      tags: [risk]
+      summary: Get a customer's current risk profile
+      operationId: getCustomerRisk
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Risk profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskProfile"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/risk/recompute:
+    post:
+      tags: [risk]
+      summary: Trigger a risk recompute for a customer
+      operationId: recomputeCustomerRisk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customer_id]
+              properties:
+                customer_id:
+                  type: string
+                horizon_days:
+                  type: integer
+                  default: 30
+      responses:
+        "202":
+          description: Recompute accepted; will appear in BigQuery when ready.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id: { type: string }
+                  status: { type: string }
+
+  /v1/chat:
+    post:
+      tags: [chat]
+      summary: Send a message to the conversational AI
+      operationId: sendChat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: Assistant reply with citations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /v1/documents/upload:
+    post:
+      tags: [documents]
+      summary: Upload a document for KYC processing
+      operationId: uploadDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, doc_type, customer_id]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                doc_type:
+                  type: string
+                  enum: [KYC_ID, PROOF_OF_ADDRESS, BANK_STATEMENT, CLAIM_FORM]
+                customer_id:
+                  type: string
+      responses:
+        "202":
+          description: Document accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  doc_id: { type: string }
+                  status: { type: string }
+
+  /v1/documents/{doc_id}:
+    get:
+      tags: [documents]
+      summary: Get the status and extracted fields for a document
+      operationId: getDocument
+      parameters:
+        - in: path
+          name: doc_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Document metadata + extraction.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/compliance/sar/draft:
+    post:
+      tags: [compliance]
+      summary: Generate a SAR draft from a closed alert
+      operationId: draftSAR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alert_id]
+              properties:
+                alert_id: { type: string }
+                additional_context: { type: string }
+      responses:
+        "200":
+          description: Drafted SAR.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draft_id: { type: string }
+                  text: { type: string }
+                  citations: { type: array, items: { type: string } }
+
+  /v1/alerts:
+    get:
+      tags: [alerts]
+      summary: List fraud alerts
+      operationId: listAlerts
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [OPEN, IN_REVIEW, ESCALATED, CLOSED]
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50, maximum: 200 }
+      responses:
+        "200":
+          description: Alert list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+components:
+  securitySchemes:
+    firebase:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Identity Platform JWT
+
+  parameters:
+    CustomerId:
+      in: path
+      name: customer_id
+      required: true
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Missing or invalid JWT.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TooManyRequests:
+      description: Rate-limited.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ServiceUnavailable:
+      description: Upstream Vertex AI or BQ unavailable.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        request_id: { type: string }
+
+    ScoreRequest:
+      type: object
+      required: [txn_id, customer_id, amount, currency, event_time]
+      properties:
+        txn_id: { type: string }
+        customer_id: { type: string }
+        account_id: { type: string }
+        amount: { type: number, format: double }
+        currency: { type: string, example: "USD" }
+        merchant_id: { type: string }
+        merchant_name: { type: string }
+        mcc: { type: string }
+        device_id: { type: string }
+        ip_address: { type: string }
+        geo_country: { type: string }
+        geo_city: { type: string }
+        event_time: { type: string, format: date-time }
+        source:
+          type: string
+          enum: [WEB, MOBILE, POS, API]
+
+    ScoreResponse:
+      type: object
+      properties:
+        request_id: { type: string }
+        txn_id: { type: string }
+        score: { type: number, format: double, minimum: 0, maximum: 1 }
+        decision:
+          type: string
+          enum: [APPROVE, REVIEW, BLOCK]
+        model_version: { type: string }
+        latency_ms: { type: number, format: double }
+        top_features:
+          type: array
+          items:
+            type: object
+            properties:
+              feature: { type: string }
+              value: { type: number, format: double }
+
+    RiskProfile:
+      type: object
+      properties:
+        customer_id: { type: string }
+        composite_score: { type: number, format: double }
+        band:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        drivers:
+          type: array
+          items:
+            type: object
+            properties:
+              feature: { type: string }
+              value: { type: number, format: double }
+        computed_at: { type: string, format: date-time }
+        model_version: { type: string }
+
+    ChatRequest:
+      type: object
+      required: [session_id, message]
+      properties:
+        session_id: { type: string }
+        message: { type: string }
+        customer_id: { type: string }
+        locale: { type: string, default: "en-US" }
+
+    ChatResponse:
+      type: object
+      properties:
+        session_id: { type: string }
+        message: { type: string }
+        citations:
+          type: array
+          items: { type: string }
+
+    Document:
+      type: object
+      properties:
+        doc_id: { type: string }
+        customer_id: { type: string }
+        doc_type: { type: string }
+        gcs_uri: { type: string }
+        uploaded_at: { type: string, format: date-time }
+        processed_at: { type: string, format: date-time, nullable: true }
+        status:
+          type: string
+          enum: [QUEUED, PROCESSED, FAILED, NEEDS_REVIEW]
+        extracted_fields:
+          type: object
+          additionalProperties: true
+        validation_result:
+          type: object
+          additionalProperties: true
+
+    Alert:
+      type: object
+      properties:
+        alert_id: { type: string }
+        txn_id: { type: string }
+        customer_id: { type: string }
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        score: { type: number, format: double }
+        decision:
+          type: string
+          enum: [APPROVE, REVIEW, BLOCK]
+        status:
+          type: string
+          enum: [OPEN, IN_REVIEW, ESCALATED, CLOSED]
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }

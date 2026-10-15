@@ -1,0 +1,8 @@
+# document_service Cloud Run image
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.7
+finguard-common
+finguard-docai
+google-cloud-documentai>=2.30
+google-cloud-storage>=2.16

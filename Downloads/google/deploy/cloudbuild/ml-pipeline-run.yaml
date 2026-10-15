@@ -1,0 +1,39 @@
+# Cloud Build pipeline: submit a Vertex AI Pipelines run.
+#
+# Usage:
+#   gcloud builds submit --config=deploy/cloudbuild/ml-pipeline-run.yaml \
+#     --substitutions=_PIPELINE=fraud_training_pipeline,_REGION=us-central1
+
+steps:
+  # 1) Build a tiny CLI container that compiles the pipeline and runs it.
+  #    We keep the source compile and the submit in the same step to
+  #    avoid shipping a separate pipeline compiler image.
+  - name: gcr.io/cloud-builders/python:3.11
+    dir: ml
+    entrypoint: pip
+    args:
+      - install
+      - -r
+      - requirements.txt
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    dir: ml
+    entrypoint: python
+    args:
+      - -m
+      - pipelines.${_PIPELINE}
+      - --project=${PROJECT_ID}
+      - --region=${_REGION}
+      - --pipeline-root=gs://${PROJECT_ID}-finguard-${_ENV}-ml-artifacts/pipelines
+      - --env=${_ENV}
+
+substitutions:
+  _PIPELINE: fraud_training_pipeline
+  _REGION: us-central1
+  _ENV: dev
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 14400s

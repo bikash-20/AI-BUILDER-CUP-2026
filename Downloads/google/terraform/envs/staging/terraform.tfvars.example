@@ -1,0 +1,4 @@
+project_id       = "finguard-staging"
+region           = "us-central1"
+access_policy_id = "REPLACE_ME"
+alert_email      = "staging-alerts@example.com"

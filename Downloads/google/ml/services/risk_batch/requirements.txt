@@ -1,0 +1,4 @@
+# risk_batch (Cloud Run Job)
+google-cloud-bigquery>=3.20
+finguard-common
+finguard-vertex

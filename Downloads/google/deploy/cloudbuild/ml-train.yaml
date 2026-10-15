@@ -1,0 +1,50 @@
+# Cloud Build pipeline: submit a Vertex AI Custom Training job.
+#
+# Usage:
+#   gcloud builds submit --config=deploy/cloudbuild/ml-train.yaml \
+#     --substitutions=_JOB=fraud_xgb,_REGION=us-central1
+
+steps:
+  # 1) Build the training container.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - ml/training/${_JOB}/Dockerfile
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/training/${_JOB}:${SHORT_SHA}
+      - .
+
+  # 2) Push the image.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/training/${_JOB}:${SHORT_SHA}
+
+  # 3) Submit the Vertex AI Custom Training job.
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - ai
+      - custom-jobs
+      - create
+      - --region=${_REGION}
+      - --display-name=${_JOB}-${SHORT_SHA}
+      - --worker-pool-spec=machine-type=n1-highmem-8,replica-count=1,container-image-uri=${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/training/${_JOB}:${SHORT_SHA}
+      - --args=--project=${PROJECT_ID},--env=${_ENV}
+    dir: ml/training/${_JOB}
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/training/${_JOB}:${SHORT_SHA}
+
+substitutions:
+  _JOB: fraud_xgb
+  _REGION: us-central1
+  _ENV: dev
+  SHORT_SHA: ${COMMIT_SHA:0:7}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 7200s

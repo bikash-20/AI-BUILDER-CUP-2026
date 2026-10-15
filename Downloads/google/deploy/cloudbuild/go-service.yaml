@@ -1,0 +1,73 @@
+# Cloud Build pipeline for any Go service in services/cmd/<name>.
+#
+# Usage:
+#   gcloud builds submit --config=deploy/cloudbuild/go-service.yaml \
+#     --substitutions=_SERVICE=fraud-service,_REGION=us-central1
+#
+# Or trigger it from a PR/merge via the GitHub Action that mirrors this
+# file at .github/workflows/go-ci.yml.
+
+steps:
+  # 1) Test
+  - name: gcr.io/cloud-builders/go
+    args:
+      - test
+      - -v
+      - ./...
+    dir: services
+
+  # 2) Build the binary (used as a smoke test that it actually compiles
+  # for linux/amd64 in addition to passing the unit tests).
+  - name: gcr.io/cloud-builders/go
+    args:
+      - build
+      - -o
+      - /workspace/out/${_SERVICE}
+      - ./cmd/${_SERVICE}
+    dir: services
+
+  # 3) Build the container image.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - services/deploy/${_SERVICE}.Dockerfile
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/${_SERVICE}:${SHORT_SHA}
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/${_SERVICE}:latest
+      - .
+
+  # 4) Push images.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/${_SERVICE}
+
+  # 5) Publish a Cloud Deploy release to the dev target.
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - deploy
+      - releases
+      - create
+      - ${_SERVICE}-${SHORT_SHA}
+      - --delivery-pipeline=finguard-${_SERVICE}
+      - --region=${_REGION}
+      - --images=${_SERVICE}=${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/${_SERVICE}:${SHORT_SHA}
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/${_SERVICE}:${SHORT_SHA}
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/${_SERVICE}:latest
+
+substitutions:
+  _SERVICE: fraud-service
+  _REGION: us-central1
+  SHORT_SHA: ${COMMIT_SHA:0:7}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 1800s

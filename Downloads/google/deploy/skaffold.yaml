@@ -1,0 +1,67 @@
+# Skaffold config — used for local development against minikube/kind
+# or a Cloud Deploy delivery pipeline.
+#
+# For Cloud Run, Cloud Deploy uses this config to render the manifests
+# (in practice, Cloud Run doesn't need k8s manifests, but the Skaffold
+# profile surface is convenient for hooking up different `deploy`
+# targets per environment).
+
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: finguard
+build:
+  artifacts:
+    - image: fraud-service
+      context: services
+      docker:
+        dockerfile: deploy/fraud-service.Dockerfile
+    - image: risk-service
+      context: services
+      docker:
+        dockerfile: deploy/risk-service.Dockerfile
+    - image: chat-bff
+      context: services
+      docker:
+        dockerfile: deploy/chat-bff.Dockerfile
+    - image: document-service
+      context: services
+      docker:
+        dockerfile: deploy/document-service.Dockerfile
+    - image: gemini-service
+      context: ml
+      docker:
+        dockerfile: services/gemini_service/Dockerfile
+    - image: compliance-llm
+      context: ml
+      docker:
+        dockerfile: services/compliance_llm/Dockerfile
+    - image: frontend
+      context: frontend
+      docker:
+        dockerfile: Dockerfile
+
+manifests:
+  rawYaml:
+    # Cloud Run services are managed by Terraform; Skaffold only
+    # renders the image-substituted manifests for Cloud Deploy.
+    - services/deploy/*.k8s.yaml
+
+deploy:
+  cloudrun:
+    projectid: ${PROJECT_ID}
+    region: us-central1
+
+profiles:
+  - name: dev
+    deploy:
+      cloudrun:
+        service: finguard-dev-fraud-service
+  - name: staging
+    deploy:
+      cloudrun:
+        service: finguard-staging-fraud-service
+  - name: prod
+    deploy:
+      cloudrun:
+        service: finguard-prod-fraud-service

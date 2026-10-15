@@ -1,0 +1,79 @@
+# Cloud Build pipeline for the Next.js frontend.
+#
+# Usage:
+#   gcloud builds submit --config=deploy/cloudbuild/frontend.yaml \
+#     --substitutions=_REGION=us-central1
+
+steps:
+  # 1) Install and type-check.
+  - name: gcr.io/cloud-builders/npm
+    args:
+      - install
+      - --ci
+    dir: frontend
+
+  - name: gcr.io/cloud-builders/npm
+    args:
+      - run
+      - typecheck
+    dir: frontend
+
+  - name: gcr.io/cloud-builders/npm
+    args:
+      - run
+      - test
+      - -- --run
+    dir: frontend
+
+  # 2) Build the production bundle (next build).
+  - name: gcr.io/cloud-builders/npm
+    args:
+      - run
+      - build
+    dir: frontend
+
+  # 3) Build the container image.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - frontend/Dockerfile
+      - --build-arg=NEXT_PUBLIC_API_BASE=
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/frontend:${SHORT_SHA}
+      - -t
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/frontend:latest
+      - frontend
+
+  # 4) Push images.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/frontend
+
+  # 5) Cloud Deploy release.
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - deploy
+      - releases
+      - create
+      - frontend-${SHORT_SHA}
+      - --delivery-pipeline=finguard-frontend
+      - --region=${_REGION}
+      - --images=frontend=${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/frontend:${SHORT_SHA}
+
+images:
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/frontend:${SHORT_SHA}
+  - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/finguard/frontend:latest
+
+substitutions:
+  _REGION: us-central1
+  SHORT_SHA: ${COMMIT_SHA:0:7}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
+
+timeout: 1800s
